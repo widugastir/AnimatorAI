@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class AI_Behaviour : StateMachineBehaviour
 {
+	public string LinkedStateName;
 	[HideInInspector] public bool IsActiveState;
-	
-	public static event System.Action<AI_Behaviour> OnStateChange;
+
+	public static event System.Action<Animator, AI_Behaviour> OnStateChange;
 	protected virtual void Begin(Animator animator, AnimatorStateInfo stateInfo, int layerIndex){}
 	protected virtual void Exit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex){}
 	protected virtual void Tick(Animator animator, AnimatorStateInfo stateInfo, int layerIndex){}
@@ -14,7 +13,7 @@ public class AI_Behaviour : StateMachineBehaviour
 	public sealed override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
 	{
 		IsActiveState = true;
-		OnStateChange?.Invoke(this);
+		OnStateChange?.Invoke(animator, this);
 		Begin(animator, stateInfo, layerIndex);
 	}
 	

@@ -23,13 +23,17 @@ public class AI_Brain : MonoBehaviour
 		}
 	}
 	
-	private void OnStateChange(AI_Behaviour behaviour)
+	private void OnStateChange(Animator animator, AI_Behaviour behaviour)
 	{
+		if (animator.gameObject != gameObject)
+			return;
 		foreach(AI_State ai in States)
 		{
-			if(behaviour.GetType().Name == ai.GetType().Name.Substring(3))
+			//if (animator.GetCurrentAnimatorStateInfo(0).IsName(ai.GetType().Name.Substring(3)))
+			if(behaviour.GetType().Name == ai.GetType().Name.Substring(3)
+				|| behaviour.LinkedStateName == ai.GetType().Name)
 			{
-				if(_activeState != null)
+				if (_activeState != null)
 				{
 					_activeState.DisableState();
 				}
