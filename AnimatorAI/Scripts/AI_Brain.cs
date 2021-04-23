@@ -17,10 +17,33 @@ public class AI_Brain : MonoBehaviour
 	private void Start()
 	{
 		_animator = GetComponent<Animator>();
+		AI_Behaviour[] behaviours = _animator.GetBehaviours<AI_Behaviour>();
+		
 		foreach(AI_State ai in States)
 		{
-			ai.Init(_animator, this);
+			foreach(AI_Behaviour beh in behaviours)
+			{
+				if(IsLinked(beh, ai))
+				{
+					ai.Init(_animator, this, beh);
+				}
+			}
+			if(ai._initialized == false)
+			{
+				ai.Init(_animator, this, null);
+			}
 		}
+	}
+	
+	private bool IsLinked(AI_Behaviour behaviour, AI_State state)
+	{
+		//if (animator.GetCurrentAnimatorStateInfo(0).IsName(ai.GetType().Name.Substring(3)))
+		if(behaviour.GetType().Name == state.GetType().Name.Substring(3)
+			|| behaviour.LinkedStateName == state.GetType().Name)
+		{
+			return true;
+		}
+		return false;
 	}
 	
 	private void OnStateChange(Animator animator, AI_Behaviour behaviour)
@@ -29,9 +52,7 @@ public class AI_Brain : MonoBehaviour
 			return;
 		foreach(AI_State ai in States)
 		{
-			//if (animator.GetCurrentAnimatorStateInfo(0).IsName(ai.GetType().Name.Substring(3)))
-			if(behaviour.GetType().Name == ai.GetType().Name.Substring(3)
-				|| behaviour.LinkedStateName == ai.GetType().Name)
+			if(IsLinked(behaviour, ai))
 			{
 				if (_activeState != null)
 				{

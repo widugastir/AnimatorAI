@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using System;
+using System.Linq;
 using System.Reflection;
 using System.ComponentModel;
 
@@ -13,14 +14,16 @@ public abstract class AI_State : MonoBehaviour
 	[SerializeField] protected AI_State[] SyncStatesActivity;
 	
 	protected Animator _animator;
-	private bool _initialized = false;
+	[HideInInspector] public bool _initialized = false;
 	private AI_Brain _brain;
 	
 	private FieldInfo[] m_fields;
+	private FieldInfo[] m_fieldsTarget;
 	private FieldInfo[] t_fields;
+	private FieldInfo[] t_fieldsTarget;
 	private EventInfo[] t_events;
 	private MethodInfo[] m_eventMethods;
-	private AI_Behaviour[] _behaviour;
+	private AI_Behaviour _behaviour;
 	
 	#region Short Expressions
 	protected void SetBoolState(string name, bool value) => _animator.SetBool(name, value);
@@ -31,8 +34,8 @@ public abstract class AI_State : MonoBehaviour
 	
 	protected virtual void OnEnable() 
 	{
-		if(_initialized)
-			StartCoroutine(PropertyChange());
+		//if(_initialized)
+		//	StartCoroutine(PropertyChange());
 	}
 	
 	public void EnableState(bool ignoreSync = false)
@@ -63,68 +66,120 @@ public abstract class AI_State : MonoBehaviour
 		}
 	}
 	
-	public virtual void Init(Animator animator, AI_Brain brain)
+	public virtual void Init(Animator animator, AI_Brain brain, AI_Behaviour behaviour)
 	{
 		if(_initialized == false)
 		{
 			DisableState();
 			_brain = brain;
 			_animator = animator;
-			m_fields = this.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public);
-			m_eventMethods = this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
-			_behaviour = _animator.GetBehaviours<AI_Behaviour>();
-			InitEvents();
+			_behaviour = behaviour;
+			
+			if(_behaviour != null)
+			{
+				m_fields = this.GetType()
+					.GetFields(BindingFlags.Instance | BindingFlags.Public)
+					.Where(field => field.GetCustomAttribute<AI_LinkData>() != null && field.FieldType.IsGenericType)
+					.ToArray();
+			
+			//m_fields = this.GetType()
+			//	.GetFields(BindingFlags.Instance | BindingFlags.Public)
+			//	.Where(field => field.GetCustomAttribute<AI_InjectField>() != null)
+			//	.ToArray();
+				
+			//m_fieldsTarget = this.GetType()
+			//	.GetFields(BindingFlags.Instance | BindingFlags.Public)
+			//	.Where(field => field.GetCustomAttribute<AI_InjectFieldTarget>() != null)
+			//	.ToArray();
+				
+				t_fields = _behaviour.GetType()
+					.GetFields(BindingFlags.Instance | BindingFlags.Public)
+					.Where(field => field.GetCustomAttribute<AI_LinkData>() != null && field.FieldType.IsGenericType)
+					.ToArray();
+					
+				m_eventMethods = this.GetType()
+					.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+					
+				foreach(FieldInfo f in m_fields)
+				{
+					foreach(FieldInfo t in t_fields)
+					{
+						if(f.Name == t.Name
+							&& f.FieldType.GetGenericTypeDefinition() == t.FieldType.GetGenericTypeDefinition()
+							&& f.FieldType.GetGenericArguments()[0] == t.FieldType.GetGenericArguments()[0])
+						{
+							AI_Data<System.Int32> f_d = (AI_Data<System.Int32>)f.GetValue(this);
+							AI_Data<System.Int32> t_d = (AI_Data<System.Int32>)t.GetValue(_behaviour);
+							f_d.Link(t_d);
+							t_d.Link(f_d);
+						}
+					}
+				}
+				
+				//t_fields = _behaviour.GetType()
+				//	.GetFields(BindingFlags.Instance | BindingFlags.Public)
+				//	.Where(field => field.GetCustomAttribute<AI_InjectField>() != null)
+				//	.ToArray();
+					
+				//t_fieldsTarget = _behaviour.GetType()
+				//	.GetFields(BindingFlags.Instance | BindingFlags.Public)
+				//	.Where(field => field.GetCustomAttribute<AI_InjectFieldTarget>() != null)
+				//	.ToArray();
+					
+				InitEvents();
+			}
 				
 			_initialized = true;
 		}
 	}
     
-	private IEnumerator PropertyChange()
-	{
-		while(m_fields.Length > 0)
-		{
-			foreach(var sb in _behaviour)
-			{
-				t_fields = sb.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public);
-				UpdateFields(sb);
-			}
-			yield return new WaitForSeconds(SyncUpdateSpeed);
-		}
-	}
+	//private IEnumerator PropertyChange()
+	//{
+	//	while(m_fields.Length > 0 || m_fieldsTarget.Length > 0)
+	//	{
+	//		UpdateFields();
+	//		yield return new WaitForSeconds(SyncUpdateSpeed);
+	//	}
+	//}
 	
-	private void UpdateFields(AI_Behaviour behavior)
-	{
-		foreach(FieldInfo f in t_fields)
-		{
-			if(f.GetCustomAttribute<AI_InjectField>() != null)
-			{
-				foreach(FieldInfo m_f in m_fields)
-				{
-					if(m_f.Name == f.Name && m_f.FieldType == f.FieldType)
-					{
-						f.SetValue(behavior, m_f.GetValue(this));
-					}
-				}
-			}
-		}
-	}
+	//private void UpdateFields()
+	//{
+	//	foreach(FieldInfo f in t_fieldsTarget)
+	//	{
+	//		foreach(FieldInfo m_f in m_fields)
+	//		{
+	//			if(m_f.Name == f.Name && m_f.FieldType == f.FieldType)
+	//			{
+	//				f.SetValue(_behaviour, m_f.GetValue(this));
+	//			}
+	//		}
+	//	}
+		
+	//	foreach(FieldInfo f in m_fieldsTarget)
+	//	{
+	//		foreach(FieldInfo m_f in t_fields)
+	//		{
+	//			if(m_f.Name == f.Name && m_f.FieldType == f.FieldType)
+	//			{
+	//				f.SetValue(this, m_f.GetValue(_behaviour));
+	//			}
+	//		}
+	//	}
+	//}
 	
 	private void InitEvents()
 	{
-		foreach(var sb in _behaviour)
+		t_events = _behaviour.GetType().GetEvents(BindingFlags.Instance | BindingFlags.Public);
+		foreach(EventInfo f in t_events)
 		{
-			t_events = sb.GetType().GetEvents(BindingFlags.Instance | BindingFlags.Public);
-			foreach(EventInfo f in t_events)
+			if(f.GetCustomAttribute<AI_InjectEvent>() != null)
 			{
-				if(f.GetCustomAttribute<AI_InjectEvent>() != null)
+				foreach(MethodInfo m_f in m_eventMethods)
 				{
-					foreach(MethodInfo m_f in m_eventMethods)
+					if(m_f.GetCustomAttribute<AI_InjectEventTarget>() != null && m_f.Name == f.Name)
 					{
-						if(m_f.GetCustomAttribute<AI_InjectEventTarget>() != null && m_f.Name == f.Name)
-						{
-							Delegate d = Delegate.CreateDelegate(f.EventHandlerType, this, m_f);
-							f.AddEventHandler(sb, d);
-						}
+						Delegate d = Delegate.CreateDelegate(f.EventHandlerType, this, m_f);
+						f.AddEventHandler(_behaviour, d);
 					}
 				}
 			}
