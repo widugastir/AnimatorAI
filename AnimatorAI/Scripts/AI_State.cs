@@ -32,12 +32,6 @@ public abstract class AI_State : MonoBehaviour
 	protected void SetTriggerState(string name) => _animator.SetTrigger(name);
 	#endregion
 	
-	protected virtual void OnEnable() 
-	{
-		//if(_initialized)
-		//	StartCoroutine(PropertyChange());
-	}
-	
 	public void EnableState(bool ignoreSync = false)
 	{
 		enabled = true;
@@ -82,16 +76,6 @@ public abstract class AI_State : MonoBehaviour
 					.Where(field => field.GetCustomAttribute<AI_LinkData>() != null && field.FieldType.IsGenericType)
 					.ToArray();
 			
-			//m_fields = this.GetType()
-			//	.GetFields(BindingFlags.Instance | BindingFlags.Public)
-			//	.Where(field => field.GetCustomAttribute<AI_InjectField>() != null)
-			//	.ToArray();
-				
-			//m_fieldsTarget = this.GetType()
-			//	.GetFields(BindingFlags.Instance | BindingFlags.Public)
-			//	.Where(field => field.GetCustomAttribute<AI_InjectFieldTarget>() != null)
-			//	.ToArray();
-				
 				t_fields = _behaviour.GetType()
 					.GetFields(BindingFlags.Instance | BindingFlags.Public)
 					.Where(field => field.GetCustomAttribute<AI_LinkData>() != null && field.FieldType.IsGenericType)
@@ -116,16 +100,6 @@ public abstract class AI_State : MonoBehaviour
 					}
 				}
 				
-				//t_fields = _behaviour.GetType()
-				//	.GetFields(BindingFlags.Instance | BindingFlags.Public)
-				//	.Where(field => field.GetCustomAttribute<AI_InjectField>() != null)
-				//	.ToArray();
-					
-				//t_fieldsTarget = _behaviour.GetType()
-				//	.GetFields(BindingFlags.Instance | BindingFlags.Public)
-				//	.Where(field => field.GetCustomAttribute<AI_InjectFieldTarget>() != null)
-				//	.ToArray();
-					
 				InitEvents();
 			}
 				
@@ -133,40 +107,6 @@ public abstract class AI_State : MonoBehaviour
 		}
 	}
     
-	//private IEnumerator PropertyChange()
-	//{
-	//	while(m_fields.Length > 0 || m_fieldsTarget.Length > 0)
-	//	{
-	//		UpdateFields();
-	//		yield return new WaitForSeconds(SyncUpdateSpeed);
-	//	}
-	//}
-	
-	//private void UpdateFields()
-	//{
-	//	foreach(FieldInfo f in t_fieldsTarget)
-	//	{
-	//		foreach(FieldInfo m_f in m_fields)
-	//		{
-	//			if(m_f.Name == f.Name && m_f.FieldType == f.FieldType)
-	//			{
-	//				f.SetValue(_behaviour, m_f.GetValue(this));
-	//			}
-	//		}
-	//	}
-		
-	//	foreach(FieldInfo f in m_fieldsTarget)
-	//	{
-	//		foreach(FieldInfo m_f in t_fields)
-	//		{
-	//			if(m_f.Name == f.Name && m_f.FieldType == f.FieldType)
-	//			{
-	//				f.SetValue(this, m_f.GetValue(_behaviour));
-	//			}
-	//		}
-	//	}
-	//}
-	
 	private void InitEvents()
 	{
 		t_events = _behaviour.GetType().GetEvents(BindingFlags.Instance | BindingFlags.Public);

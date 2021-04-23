@@ -5,7 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class AI_Brain : MonoBehaviour
 {
-	public DataBase Data;
 	[SerializeField] private AI_State[] States;
 	
 	private AI_State _activeState;
@@ -37,7 +36,6 @@ public class AI_Brain : MonoBehaviour
 	
 	private bool IsLinked(AI_Behaviour behaviour, AI_State state)
 	{
-		//if (animator.GetCurrentAnimatorStateInfo(0).IsName(ai.GetType().Name.Substring(3)))
 		if(behaviour.GetType().Name == state.GetType().Name.Substring(3)
 			|| behaviour.LinkedStateName == state.GetType().Name)
 		{
