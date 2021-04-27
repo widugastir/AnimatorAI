@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-// Data container
+// Data-container for sync StateMachineBehaviour with MonoBehaviour
 [System.Serializable]
 public class AI_Data<T> :ILinkable
 {
@@ -13,7 +13,6 @@ public class AI_Data<T> :ILinkable
     {
 	    get
 		{
-			
 			return _value;
 		}
 	    

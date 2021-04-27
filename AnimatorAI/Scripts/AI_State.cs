@@ -1,36 +1,25 @@
-﻿using System.Collections.Generic;
-using System.Collections;
-using UnityEngine;
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
-using System.ComponentModel;
+using UnityEngine;
 
 public abstract class AI_State : MonoBehaviour
 {
-	[Header("Settings")]
+	[Header("Sync")]
 	public float SyncUpdateSpeed = 1f;
-	public DisableType Disable = DisableType.script;
 	[SerializeField] protected AI_State[] SyncStatesActivity;
 	
-	protected Animator _animator;
-	[HideInInspector] public bool _initialized = false;
+	[Header("Settings")]
+	public DisableType Disable = DisableType.script;
+	public Animator _animator;
 	private AI_Brain _brain;
-	
 	private FieldInfo[] m_fields;
-	private FieldInfo[] m_fieldsTarget;
 	private FieldInfo[] t_fields;
-	private FieldInfo[] t_fieldsTarget;
 	private EventInfo[] t_events;
 	private MethodInfo[] m_eventMethods;
-	private AI_Behaviour _behaviour;
 	
-	#region Short Expressions
-	protected void SetBoolState(string name, bool value) => _animator.SetBool(name, value);
-	protected void SetFloatState(string name, float value) => _animator.SetFloat(name, value);
-	protected void SetIntState(string name, int value) => _animator.SetInteger(name, value);
-	protected void SetTriggerState(string name) => _animator.SetTrigger(name);
-	#endregion
+	[HideInInspector] public AI_Behaviour _behaviour;
+	[HideInInspector] public bool _initialized = false;
 	
 	public void EnableState(bool ignoreSync = false)
 	{
@@ -84,26 +73,30 @@ public abstract class AI_State : MonoBehaviour
 				m_eventMethods = this.GetType()
 					.GetMethods(BindingFlags.Instance | BindingFlags.Public);
 					
-				foreach(FieldInfo f in m_fields)
-				{
-					foreach(FieldInfo t in t_fields)
-					{
-						if(f.Name == t.Name
-							&& f.FieldType.GetGenericTypeDefinition() == t.FieldType.GetGenericTypeDefinition()
-							&& f.FieldType.GetGenericArguments()[0] == t.FieldType.GetGenericArguments()[0])
-						{
-							AI_Data<System.Int32> f_d = (AI_Data<System.Int32>)f.GetValue(this);
-							AI_Data<System.Int32> t_d = (AI_Data<System.Int32>)t.GetValue(_behaviour);
-							f_d.Link(t_d);
-							t_d.Link(f_d);
-						}
-					}
-				}
-				
+				LinkData();
 				InitEvents();
 			}
 				
 			_initialized = true;
+		}
+	}
+	
+	private void LinkData()
+	{
+		foreach(FieldInfo f in m_fields)
+		{
+			foreach(FieldInfo t in t_fields)
+			{
+				if(f.Name == t.Name
+					&& f.FieldType.GetGenericTypeDefinition() == t.FieldType.GetGenericTypeDefinition()
+					&& f.FieldType.GetGenericArguments()[0] == t.FieldType.GetGenericArguments()[0])
+				{
+					AI_Data<System.Int32> f_d = (AI_Data<System.Int32>)f.GetValue(this);
+					AI_Data<System.Int32> t_d = (AI_Data<System.Int32>)t.GetValue(_behaviour);
+					f_d.Link(t_d);
+					t_d.Link(f_d);
+				}
+			}
 		}
 	}
     

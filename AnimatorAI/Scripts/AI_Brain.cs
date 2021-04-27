@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
+//Main AI system component
 [RequireComponent(typeof(Animator))]
 public class AI_Brain : MonoBehaviour
 {

@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
 
-/// <summary>
-/// Use it inside AI_Behaviour on events
-/// </summary>
+/// Use it bind event with method, beetwen AI_Behaviour and AI_State
 [System.AttributeUsage(System.AttributeTargets.Event)]
 public class AI_InjectEvent : PropertyAttribute{}
